@@ -4,6 +4,9 @@
 
 The jcs package implements the JSON Canonicalization Scheme (JCS) as defined in RFC 8785. JCS is a method for converting JSON data into a canonical form, ensuring that the data is consistently represented in a way that allows for reliable comparisons and signatures. This package provides a Go implementation that allows encoding Go values into canonical JSON format, which can be used for digital signatures, data integrity checks, and other cryptographic applications.
 
+### Command Line
+See `jcscli` [documentation](https://github.com/Kbgjtn/jcs/tree/master/cmd/jcscli#readme)
+
 ### Supported Types and Behavior
 
 1. **`nil`**
