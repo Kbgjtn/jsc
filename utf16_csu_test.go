@@ -37,6 +37,7 @@ func TestAppendUTF16(t *testing.T) {
 }
 
 func BenchmarkAppendUTF16(b *testing.B) {
+	b.ReportAllocs()
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for _, size := range benchSizes() {
@@ -48,6 +49,7 @@ func BenchmarkAppendUTF16(b *testing.B) {
 			func(b *testing.B) {
 				dst := buf[:0]
 
+				b.ResetTimer()
 				for b.Loop() {
 					_, _, err := appendUTF16(dst, s)
 					if err != nil {

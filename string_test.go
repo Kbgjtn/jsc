@@ -45,19 +45,21 @@ func TestAppendString(t *testing.T) {
 }
 
 func BenchmarkAppendString(b *testing.B) {
+	b.ReportAllocs()
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for _, size := range benchSizes() {
 		buf := make([]byte, 0, size*3)
-		s := randomString(size, rng)
+		sample := randomString(size, rng)
 
 		b.Run(
 			"Size-"+strconv.Itoa(size),
 			func(b *testing.B) {
 				dst := buf[:0]
 
+				b.ResetTimer()
 				for b.Loop() {
-					_, err := appendString(dst, s)
+					_, err := appendString(dst, sample)
 					if err != nil {
 						b.Fatal(err)
 						return
