@@ -101,7 +101,7 @@ jobs:
             git commit -m "Update CHANGELOG for ${VERSION}"
 
             SAFE_VERSION=${VERSION//\//-}
-            BRANCH="chore/changelog-${SAFE_VERSION}"
+            BRANCH="changelog/${SAFE_VERSION}"
             git checkout -b "$BRANCH"
 
             git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git"

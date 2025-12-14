@@ -27,9 +27,9 @@ go install github.com/Kbgjtn/jcs/cmd/jcscli@latest
 
 This installs jcscli into your $GOPATH/bin or $HOME/go/bin.
 
-From release binaries:
+### From release binaries:
 
-Download prebuilt binaries for Linux, macOS, and Windows from the Releases page.
+Download prebuilt binaries for Linux, macOS, and Windows from the [Releases page](https://github.com/Kbgjtn/jcs/releases).
 
 ## Usage Examples
 
