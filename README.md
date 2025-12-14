@@ -157,3 +157,45 @@ The `ErrNumberOOR` (Out of Range) error is returned when a number exceeds the va
 Benchmarks show predictable linear scaling with input size.
 The majority of runtime cost comes from Go’s `strconv.AppendFloat` implementation, which performs the heavy float‑to‑string conversion. The `numberNormalizer` adds a small overhead (~3–4%) to enforce RFC exponent formatting.
 While specialized algorithms like Ryu or Grisu3 can be faster, this approach is correct, stable, and maintainable.
+
+### Object Compliance and Performance
+
+#### Canonicalization Rules for Objects
+
+RFC 8785 requires that JSON objects (`map[string]any` in Go) be serialized in a **canonical form**:
+
+- **Lexicographic ordering of keys**  
+  Keys must be sorted by Unicode code points. This is achieved by converting each key into UTF‑16 code units and comparing them during sort.
+
+- **UTF‑8 validation**  
+  Keys must be valid UTF‑8. Invalid sequences trigger `ErrInvalidUTF8`.
+
+- **Stable formatting**
+  - Objects are enclosed in `{}`.
+  - Keys are quoted strings, followed by a colon `:`.
+  - Values are serialized in canonical form (numbers, strings, arrays, nested objects).
+  - Entries are separated by commas `,` with no extra whitespace.
+
+- **Error propagation**  
+  If any key or value fails to encode (e.g., unsupported type, invalid UTF‑8, NaN/Inf), serialization aborts and returns the error.
+
+**Observations:**
+
+- Runtime grows roughly linearly with object size, dominated by sorting cost (`O(n log n)`).
+- Allocation count remains low (<50 even for 10M entries).
+- Memory usage scales with number of keys due to UTF‑16 buffers and key metadata.
+
+**Insights:**
+TLDR; Performance is dominated by key sorting, which is unavoidable under the specification. Memory and allocation counts remain modest, and runtime scales predictably with object size.
+
+- **UTF‑16 conversion (~6%)**  
+  Each key is decoded into UTF‑16 code units for lexicographic comparison.
+
+- **Key collection (~9%)**  
+  Building the UTF‑16 buffer and metadata (`kv` structs).
+
+- **Sorting (~45%)**  
+  `sort.Slice` compares UTF‑16 slices to enforce canonical ordering. This is the dominant cost.
+
+- **Serialization (~20%)**  
+  Keys are written with `appendString`, values with `Append`. Linear in number of entries.
