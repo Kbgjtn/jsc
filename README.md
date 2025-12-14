@@ -140,7 +140,7 @@ The `ErrNumberOOR` (Out of Range) error is returned when a number exceeds the va
 - **NaN and Infinity**  
   `NaN`, `+Inf`, and `-Inf` are explicitly disallowed. If encountered, the encoder returns `ErrNaN` or `ErrInf`.
 
-- **Safe integer range**  
+- **Safe integer range**
   Integers must lie within the IEEE‑754 double‑precision safe range: \[-(2^53‑1), +(2^53‑1)\]. Values outside this range cannot be represented exactly as `float64` and will trigger `ErrNumberOOR`.
 
 - **Shortest decimal representation**  
