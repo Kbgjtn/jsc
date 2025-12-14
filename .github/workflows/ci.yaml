@@ -23,3 +23,19 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.1
+  benchmark:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Run Benchmarks
+        run: go test -bench=. -benchmem ./... > bench.txt
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: bench.txt
