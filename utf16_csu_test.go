@@ -9,17 +9,19 @@ import (
 
 func TestAppendUTF16(t *testing.T) {
 	tests := []struct {
-		name string
-		in   string
-		want []uint16
-
+		name    string
+		in      string
+		want    []uint16
 		wantErr error
 	}{
 		{name: "ascii characters", in: "A", want: []uint16{0x41}},
 		{name: "Latin character", in: "é", want: []uint16{0xE9}},
 		{name: "Euro sign", in: "€", want: []uint16{0x20AC}},
 		{name: "U+1F600", in: "😀", want: []uint16{0xD83D, 0xDE00}},
+		{name: "U+FFFD", in: string([]byte{0xEF, 0xBF, 0xBD}), want: []uint16{0xfffd}}, // replacement character
 		{name: "mixed string", in: "😀€éA", want: []uint16{0xD83D, 0xDE00, 0x20AC, 0xE9, 0x41}},
+		{name: "invalid single byte rune", in: string([]byte{0xFF}), want: make([]uint16, 0), wantErr: ErrInvalidUTF8},
+		{name: "truncated 3-byte sequence", in: string([]byte{0xE2, 0x82}), want: make([]uint16, 0), wantErr: ErrInvalidUTF8},
 	}
 
 	for _, tc := range tests {

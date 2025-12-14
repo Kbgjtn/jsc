@@ -24,17 +24,31 @@ type kv struct {
 	len int
 }
 
-// appendUTF16 appends the UTF-16 encoded units of a string `s` to the given buffer `buf`
-// and returns the updated buffer, the number of UTF-16 units added, and any error encountered.
+// appendUTF16 converts a UTF-8 encoded string into UTF-16 code units.
 //
-// this function assume that value of s is a valid UTF-8 string, it cost more when check both rune and the entires,
-// and cause slightly overhead at very large sizes, at 100k runes cost nearly doubles compared to small inputs.
-// If you expect very large strings, consider chunking or parallelization
+// The function iterates over the input string using utf8.DecodeRuneInString,
+// decoding one rune at a time and appending its UTF-16 representation to buf.
+// Runes in the Basic Multilingual Plane (U+0000–U+FFFF) are encoded as a single
+// 16-bit value. Supplementary characters (U+10000 and above) are encoded as a
+// surrogate pair using utf16.EncodeRune.
+//
+// Invalid UTF-8 handling:
+//   - utf8.DecodeRuneInString returns utf8.RuneError (U+FFFD) when it encounters
+//     malformed input.
+//   - If RuneError is returned with size == 1, this indicates an invalid single
+//     byte sequence (such as 0xFF). In this case, appendUTF16 returns ErrInvalidUTF8.
+//   - Other cases of RuneError (size > 1) are treated as replacement characters
+//     and encoded as U+FFFD. This matches Go’s convention of replacing malformed
+//     multi-byte sequences with U+FFFD rather than failing.
+//
+// The returned slice contains the appended UTF-16 code units, the number of
+// units written, and an error if invalid UTF-8 was detected.
 func appendUTF16(buf []uint16, s string) ([]uint16, int, error) {
 	start := len(buf)
 
-	for _, r := range s {
-		if !utf8.ValidRune(r) {
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if r == utf8.RuneError && size == 1 {
 			return buf, 0, ErrInvalidUTF8
 		}
 
@@ -61,6 +75,7 @@ func appendUTF16(buf []uint16, s string) ([]uint16, int, error) {
 			h, l := utf16.EncodeRune(r)
 			buf = append(buf, uint16(h), uint16(l))
 		}
+		i += size
 	}
 
 	return buf, len(buf) - start, nil
