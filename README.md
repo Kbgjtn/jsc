@@ -95,17 +95,28 @@ Returned when the encoder encounters an infinity value, either positive (`+Inf`)
 #### 4. `ErrInvalidUTF8`
 
 **Description**:  
-Returned when the encoder encounters a string containing invalid UTF‑8 byte sequences. JCS requires that all strings be valid UTF‑8. If a string with invalid UTF‑8 characters is passed, this error is triggered.
+Returned when the encoder encounters a string containing invalid UTF‑8 byte sequences. JCS requires that all strings be valid UTF‑8. Both `appendUTF16` and `appendString` enforce this rule, but they do so at different stages:
+
+- **From `UTF16`**:
+  - Invalid single‑byte sequences (e.g., `0xFF`)
+  - Truncated multi‑byte sequences (e.g., `0xE2 0x82`)
+  - Surrogate code points (`U+D800–U+DFFF`) which are not valid Unicode scalar values
+
+- **From `UTF-8`**:
+  - Same invalid UTF‑8 checks as above
+  - Additional rejection of surrogate code points during string escaping
+  - Ensures control characters are escaped correctly and rejects malformed sequences inline
 
 **Possible Causes**:
 
-- Strings containing invalid or corrupted UTF‑8 byte sequences.
-- Encodings that are not UTF‑8 (e.g., UTF‑16 or other encodings).
+- Strings containing invalid or corrupted UTF‑8 byte sequences
+- Encodings that are not UTF‑8 (e.g., UTF‑16 or other encodings)
 - Malformed sequences such as:
-  - **Invalid single‑byte values** (e.g., `0xFF`), detected when `utf8.DecodeRuneInString` returns `RuneError` with `size == 1`.
-  - **Truncated multi‑byte sequences** (e.g., `0xE2 0x82`), which must also be rejected for RFC 8785 compliance.
+  - **Invalid single‑byte values** (e.g., `0xFF`)
+  - **Truncated multi‑byte sequences** (e.g., `0xE2 0x82`)
+  - **Surrogate code points** (`U+D800–U+DFFF`)
 
-> Note: A valid U+FFFD replacement character (`0xEF 0xBF 0xBD`) is allowed, since it is a legitimate Unicode code point.
+> Note: A valid U+FFFD replacement character (`0xEF 0xBF 0xBD`) is allowed, since it is a legitimate Unicode scalar value.
 
 ---
 
