@@ -29,14 +29,33 @@ jobs:
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
           go build -ldflags "-X main.version=${GITHUB_REF_NAME}" \
           -o "$OUTPUT" ./cmd/jcscli
-      - name: Package artifacts
+
+          echo "After build, listing files:"
+          ls -la
+      - name: Package artifacts (debug)
         run: |
+          set -x
+          echo "Files in workspace before packaging:"
+          ls -la
+
           if [ "${{ matrix.goos }}" = "windows" ]; then
             OUTPUT="jcscli-${{ matrix.goos }}-${{ matrix.goarch }}.exe"
+            echo "Packaging $OUTPUT into ${OUTPUT%.exe}.zip"
+            if [ ! -f "$OUTPUT" ]; then
+              echo "ERROR: expected file $OUTPUT not found"
+              ls -la
+              exit 2
+            fi
             zip "${OUTPUT%.exe}.zip" "$OUTPUT"
             rm "$OUTPUT"
           else
             OUTPUT="jcscli-${{ matrix.goos }}-${{ matrix.goarch }}"
+            echo "Packaging $OUTPUT into $OUTPUT.tar.gz"
+            if [ ! -f "$OUTPUT" ]; then
+              echo "ERROR: expected file $OUTPUT not found"
+              ls -la
+              exit 2
+            fi
             tar -czf "$OUTPUT.tar.gz" "$OUTPUT"
             rm "$OUTPUT"
           fi
